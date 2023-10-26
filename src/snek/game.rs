@@ -23,7 +23,7 @@ impl Snek {
   pub fn new() -> Self {
     Self {
       speed: 40.0,
-      path: vec![engine::Point2d { x: 400.0, y: 350.0 },
+      path: vec![engine::Point2d { x: 400.0, y: 320.0 },
                  engine::Point2d { x: 400.0, y: 300.0 }],
       direction: Direction::Up,
     }

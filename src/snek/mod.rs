@@ -21,7 +21,7 @@ impl SnekGame {
       ready: false,
       frame_number: 0,
       snek: Snek::new(),
-      boundary: Rect::new(250.0, 200.0, 300.0, 200.0),
+      boundary: Rect::new(300.0, 200.0, 200.0, 200.0),
     }
   }
 }
