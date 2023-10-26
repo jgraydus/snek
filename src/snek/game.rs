@@ -1,13 +1,11 @@
-use async_trait::async_trait;
 use crate::constants::*;
 use crate::engine;
-use crate::engine::{Game, Rect};
 use wasm_bindgen::prelude::*;
 
 #[derive(Clone,Copy,Debug,Eq,Ord,PartialEq,PartialOrd)]
-enum Direction { Left, Right, Up, Down }
+pub enum Direction { Left, Right, Up, Down }
 
-fn direction(key_state: &engine::KeyState) -> Option<Direction> {
+pub fn direction(key_state: &engine::KeyState) -> Option<Direction> {
   if key_state.is_pressed(engine::Key::Up)    { return Some(Direction::Up); }
   if key_state.is_pressed(engine::Key::Down)  { return Some(Direction::Down); }
   if key_state.is_pressed(engine::Key::Left)  { return Some(Direction::Left); }
@@ -15,14 +13,14 @@ fn direction(key_state: &engine::KeyState) -> Option<Direction> {
   return None;
 }
 
-struct Snek {
-  speed: f64, // pixels per second
-  path: Vec<engine::Point2d>,
-  direction: Direction,
+pub struct Snek {
+  pub speed: f64, // pixels per second
+  pub path: Vec<engine::Point2d>,
+  pub direction: Direction,
 }
 
 impl Snek {
-  fn new() -> Self {
+  pub fn new() -> Self {
     Self {
       speed: 40.0,
       path: vec![engine::Point2d { x: 400.0, y: 350.0 },
@@ -31,7 +29,7 @@ impl Snek {
     }
   }
 
-  fn update(&mut self, key_state: &engine::KeyState) {
+  pub fn update(&mut self, key_state: &engine::KeyState) {
     // handle changing directions
     if let Some(d) = direction(key_state) {
       match (d, self.direction) {
@@ -66,7 +64,7 @@ impl Snek {
     shorten_path(&mut self.path, distance*0.9);
   }
 
-  fn draw(&self, renderer: &engine::Renderer) {
+  pub fn draw(&self, renderer: &engine::Renderer) {
     renderer.path(&self.path, &JsValue::from("red"), Some(10.0));
   }
 }
@@ -99,63 +97,5 @@ fn shorten_path(path: &mut Vec<engine::Point2d>, amount: f64) {
       }
     }
   } 
-}
-
-pub struct SnekGame {
-  ready: bool,
-  frame_number: u64,
-  snek: Snek,
-  boundary: Rect,
-}
-
-impl SnekGame {
-  pub fn new() -> Self {
-    Self {
-      ready: false,
-      frame_number: 0,
-      snek: Snek::new(),
-      boundary: Rect::new(250.0, 200.0, 300.0, 200.0),
-    }
-  }
-}
-
-#[async_trait(?Send)]
-impl Game for SnekGame {
-  async fn init(&self) -> Result<Box<dyn Game>, ()> {
-    Ok(Box::new(Self::new()))
-  }
-
-  fn update(&mut self, key_state: &engine::KeyState) {
-    self.frame_number += 1;
-
-    if let Some(d) = direction(key_state) {
-      self.ready = true;
-    }
-
-    if !self.ready { return; }
-
-    self.snek.update(key_state);
-  }
-
-  fn draw(&self, renderer: &engine::Renderer) {
-    // clear the background and draw the border
-    renderer.clear();
-    renderer.rect(
-      &engine::Rect::new(0.0, 0.0, CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64),
-      None,
-      Some(&JsValue::from("red")),
-      Some(3.0)
-    );
-
-    // draw the boundary
-    renderer.rect(
-      &self.boundary,
-      Some(&JsValue::from("black")),
-      Some(&JsValue::from("red")),
-      Some(10.0));
-
-    // draw the snek
-    self.snek.draw(renderer);
-  }
 }
 
