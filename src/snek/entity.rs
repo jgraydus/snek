@@ -82,6 +82,10 @@ impl Snek {
     let l = length(self);
     shorten_path(&mut self.path, l*percentage);
   }
+
+  pub fn increase_speed(&mut self, amount: f64) {
+    self.speed += amount;
+  }
 }
 
 fn length(snek: &Snek) -> f64 {

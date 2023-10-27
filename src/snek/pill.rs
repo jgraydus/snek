@@ -7,6 +7,7 @@ pub enum PillType {
   ExpandBoundary,
   ShortenSnek,
   SpawnEnemySnek,
+  IncreaseSpeed,
 }
 
 impl PillType {
@@ -15,6 +16,7 @@ impl PillType {
       PillType::ExpandBoundary => JsValue::from("yellow"),
       PillType::ShortenSnek => JsValue::from("blue"),
       PillType::SpawnEnemySnek => JsValue::from("red"),
+      PillType::IncreaseSpeed => JsValue::from("green"),
     }
   }
 }

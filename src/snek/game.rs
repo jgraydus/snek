@@ -100,6 +100,7 @@ impl Game for SnekGame {
                                             self.boundary.random_point(),
                                             Direction::Up));
         }
+        PillType::IncreaseSpeed => { self.snek.increase_speed(5.0); }
       }
     }
 
@@ -114,11 +115,12 @@ impl Game for SnekGame {
     // maybe spawn a pill
     if rand::random::<f64>() < 0.0001 * self.frames_since_pill_spawn as f64 {
       let Point2d { x, y } = self.boundary.random_point();
-      let n = rand::random::<u8>() % 3;
+      let n = rand::random::<u8>() % 6;
       let pill_type = match n {
-        0 => PillType::ExpandBoundary,
-        1 => PillType::ShortenSnek,
-        2 => PillType::SpawnEnemySnek,
+        0 | 1 | 2 => PillType::ExpandBoundary,
+        3 => PillType::ShortenSnek,
+        4 => PillType::SpawnEnemySnek,
+        5 => PillType::IncreaseSpeed,
         _ => unreachable!(),
       };
       let pill = Pill::new(pill_type, x, y);
