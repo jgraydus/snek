@@ -80,5 +80,31 @@ impl Renderer {
     self.cxt.set_stroke_style(stroke_style);
     self.cxt.stroke();
   }
+
+  pub fn circle(
+    &self,
+    position: &Point2d,
+    radius: f64,
+    fill_style: Option<&JsValue>,   // only fills if fill_style is provided
+    stroke_style: Option<&JsValue>, // only strokes if stroke_style is provided
+    line_width: Option<f64>         // optional. defaults to 1.0 line width if not provided
+  ) {
+    self.cxt.begin_path(); 
+    let _ = self.cxt.arc(position.x, position.y, radius, 0.0, 2.0*3.141592);
+    if let Some(fill_style) = fill_style {
+      self.cxt.set_fill_style(fill_style);
+      self.cxt.fill();
+    }
+    if let Some(stroke_style) = stroke_style {
+      if let Some(line_width) = line_width {
+        self.cxt.set_line_width(line_width);
+      } else {
+        self.cxt.set_line_width(1.0);
+      }
+      self.cxt.set_stroke_style(stroke_style);
+      self.cxt.stroke();
+    }
+  }
+
 }
 

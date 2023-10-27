@@ -1,101 +1,99 @@
+use async_trait::async_trait;
 use crate::constants::*;
-use crate::engine;
+use crate::engine::{Game, KeyState, Point2d, Rect, Renderer};
+use crate::snek::collision::{Collision};
+use crate::snek::entity::{Boundary, direction, Snek};
+use crate::snek::pill::{Pill,PillType};
+use rand::prelude::*;
 use wasm_bindgen::prelude::*;
 
-#[derive(Clone,Copy,Debug,Eq,Ord,PartialEq,PartialOrd)]
-pub enum Direction { Left, Right, Up, Down }
-
-pub fn direction(key_state: &engine::KeyState) -> Option<Direction> {
-  if key_state.is_pressed(engine::Key::Up)    { return Some(Direction::Up); }
-  if key_state.is_pressed(engine::Key::Down)  { return Some(Direction::Down); }
-  if key_state.is_pressed(engine::Key::Left)  { return Some(Direction::Left); }
-  if key_state.is_pressed(engine::Key::Right) { return Some(Direction::Right); }
-  return None;
+pub struct SnekGame {
+  ready: bool,
+  frame_number: u64,
+  snek: Snek,
+  boundary: Boundary,
+  pills: Vec<Pill>,
+  frames_since_pill_spawn: u64,
 }
 
-pub struct Snek {
-  pub speed: f64, // pixels per second
-  pub path: Vec<engine::Point2d>,
-  pub direction: Direction,
-}
-
-impl Snek {
+impl SnekGame {
   pub fn new() -> Self {
     Self {
-      speed: 40.0,
-      path: vec![engine::Point2d { x: 400.0, y: 320.0 },
-                 engine::Point2d { x: 400.0, y: 300.0 }],
-      direction: Direction::Up,
+      ready: false,
+      frame_number: 0,
+      snek: Snek::new(),
+      boundary: Boundary::new(),
+      pills: Vec::new(),
+      frames_since_pill_spawn: 0,
     }
-  }
-
-  pub fn update(&mut self, key_state: &engine::KeyState) {
-    // handle changing directions
-    if let Some(d) = direction(key_state) {
-      match (d, self.direction) {
-        // ignore if the keypress is the same direction or opposite direction
-        (Direction::Left, Direction::Up) |
-        (Direction::Left, Direction::Down) |
-        (Direction::Right, Direction::Up) |
-        (Direction::Right, Direction::Down) |
-        (Direction::Up, Direction::Left) |
-        (Direction::Up, Direction::Right) |
-        (Direction::Down, Direction::Left) |
-        (Direction::Down, Direction::Right) => {
-          self.direction = d;
-          log!("CHANGE DIRECTIONS {d:?}");
-          let current_pos = self.path[self.path.len() - 1].clone();
-          self.path.push(current_pos);
-        },
-        _ => {}
-      }
-    }
-    // move the snek
-    let distance = self.speed * FRAME_LENGTH;
-    let i = self.path.len() - 1;
-    // lengthen in the direction of movement
-    match self.direction {
-      Direction::Up    => { self.path.get_mut(i).unwrap().y -= distance; }
-      Direction::Down  => { self.path.get_mut(i).unwrap().y += distance; }
-      Direction::Left  => { self.path.get_mut(i).unwrap().x -= distance; }
-      Direction::Right => { self.path.get_mut(i).unwrap().x += distance; }
-    }
-    // shorten the end
-    shorten_path(&mut self.path, distance*0.9);
-  }
-
-  pub fn draw(&self, renderer: &engine::Renderer) {
-    renderer.path(&self.path, &JsValue::from("red"), Some(10.0));
   }
 }
 
-fn final_segment_length(path: &Vec<engine::Point2d>) -> f64 {
-  let p0 = path.get(0).unwrap();
-  let p1 = path.get(1).unwrap();
-  (p0.x - p1.x).abs() + (p0.y - p1.y).abs() 
-}
+#[async_trait(?Send)]
+impl Game for SnekGame {
+  async fn init(&self) -> Result<Box<dyn Game>, ()> {
+    Ok(Box::new(Self::new()))
+  }
 
-fn shorten_path(path: &mut Vec<engine::Point2d>, amount: f64) {
-  let d = final_segment_length(path);
-  if d < amount {
-    path.remove(0);
-    shorten_path(path, amount - d);
-  } else {
-    let p1 = path.get(1).unwrap().clone();
-    let p0 = path.get_mut(0).unwrap();
-    if p0.x == p1.x {
-      if p0.y < p1.y {
-        p0.y += amount;
-      } else {
-        p0.y -= amount;
-      }
-    } else {
-      if p0.x < p1.x {
-        p0.x += amount;
-      } else {
-        p0.x -= amount;
+  fn update(&mut self, key_state: &KeyState) {
+    self.frame_number += 1;
+    self.frames_since_pill_spawn += 1;
+
+    if let Some(_) = direction(key_state) {
+      self.ready = true;
+    }
+
+    if !self.ready { return; }
+
+    self.snek.update(key_state);
+
+    if self.snek.colliding(&()) || self.snek.colliding(&self.boundary) {
+      // log!("collision: {c:?}");
+      // TODO game over
+    }
+
+    // check for pill collisions
+    if let Some(i) = self.snek.colliding(&self.pills) {
+      log!("collided with pill {i:?}");
+      let pill = self.pills.remove(i);
+      match pill.pill_type {
+        PillType::ExpandBoundary => { self.boundary.expand(); },
+        PillType::ShortenSnek => { self.snek.shorten(0.1); },
       }
     }
-  } 
+
+    // maybe spawn a pill
+    if rand::random::<f64>() < 0.0001 * self.frames_since_pill_spawn as f64 {
+      let Point2d { x, y } = self.boundary.random_point();
+      let pill = if rand::random() {
+        Pill::new(PillType::ExpandBoundary, x, y)
+      } else {
+        Pill::new(PillType::ShortenSnek, x, y)
+      };
+      self.pills.push(pill);
+      self.frames_since_pill_spawn = 0;
+    }
+  }
+
+  fn draw(&self, renderer: &Renderer) {
+    // clear the background and draw the border
+    renderer.clear();
+    renderer.rect(
+      &Rect::new(0.0, 0.0, CANVAS_WIDTH as f64, CANVAS_HEIGHT as f64),
+      None,
+      Some(&JsValue::from("red")),
+      Some(5.0));
+
+    // draw the boundary
+    self.boundary.draw(renderer);
+
+    // draw the snek
+    self.snek.draw(renderer);
+
+    // draw the pills
+    for pill in &self.pills {
+      pill.draw(renderer);
+    } 
+  }
 }
 
