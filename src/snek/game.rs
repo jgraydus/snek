@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::constants::*;
 use crate::engine::{Game, KeyState, Point2d, Rect, Renderer};
 use crate::snek::collision::{Collision};
-use crate::snek::entity::{Boundary, Direction, direction, Snek};
+use crate::snek::entity::{AiSnek,Boundary, Direction, direction, Snek};
 use crate::snek::pill::{Pill,PillType};
 use rand;
 use wasm_bindgen::prelude::*;
@@ -15,6 +15,7 @@ pub struct SnekGame {
   boundary: Boundary,
   pills: Vec<Pill>,
   frames_since_pill_spawn: u64,
+  enemy_sneks: Vec<AiSnek>,
 }
 
 impl SnekGame {
@@ -30,6 +31,7 @@ impl SnekGame {
       boundary: Boundary::new(),
       pills: Vec::new(),
       frames_since_pill_spawn: 0,
+      enemy_sneks: Vec::new(),
     }
   }
 }
@@ -53,6 +55,36 @@ impl Game for SnekGame {
     // check for collisions
     if self.snek.colliding(&()) || self.snek.colliding(&self.boundary) {
       self.game_over = true;
+      return;
+    }
+    for enemy_snek in &self.enemy_sneks {
+      if self.snek.colliding(enemy_snek) {
+        self.game_over = true;
+        return;
+      }
+    }
+
+    // if an enemy snek hits something, it "dies", ie. stops moving
+    let mut deads = Vec::new();
+    for i in 0..self.enemy_sneks.len() {
+      let enemy_snek = &self.enemy_sneks[i];
+
+      if enemy_snek.colliding(&())                 // collides with self
+         || enemy_snek.colliding(&self.snek)       // collides with player
+         || enemy_snek.colliding(&self.boundary) { // collides with boundary
+        deads.push(i);
+        continue;
+      }
+
+      for j in 0..self.enemy_sneks.len() {
+        if i != j && enemy_snek.colliding(&self.enemy_sneks[j]) {
+          deads.push(i);
+          continue;
+        }
+      }
+    }
+    for i in deads {
+      self.enemy_sneks[i].die();
     }
 
     // check for pill collisions
@@ -62,6 +94,12 @@ impl Game for SnekGame {
       match pill.pill_type {
         PillType::ExpandBoundary => { self.boundary.expand(); },
         PillType::ShortenSnek => { self.snek.shorten(0.1); },
+        PillType::SpawnEnemySnek => {
+          self.enemy_sneks.push(AiSnek::new("red".to_string(),
+                                            40.0,
+                                            self.boundary.random_point(),
+                                            Direction::Up));
+        }
       }
     }
 
@@ -69,14 +107,21 @@ impl Game for SnekGame {
     // update game state
     self.snek.update(key_state);
 
+    for snek in &mut self.enemy_sneks {
+      snek.update();
+    }
+
     // maybe spawn a pill
     if rand::random::<f64>() < 0.0001 * self.frames_since_pill_spawn as f64 {
       let Point2d { x, y } = self.boundary.random_point();
-      let pill = if rand::random() {
-        Pill::new(PillType::ExpandBoundary, x, y)
-      } else {
-        Pill::new(PillType::ShortenSnek, x, y)
+      let n = rand::random::<u8>() % 3;
+      let pill_type = match n {
+        0 => PillType::ExpandBoundary,
+        1 => PillType::ShortenSnek,
+        2 => PillType::SpawnEnemySnek,
+        _ => unreachable!(),
       };
+      let pill = Pill::new(pill_type, x, y);
       self.pills.push(pill);
       self.frames_since_pill_spawn = 0;
     }
@@ -101,6 +146,11 @@ impl Game for SnekGame {
 
     // draw the snek
     self.snek.draw(renderer);
+
+    // draw the enemy sneks
+    for snek in &self.enemy_sneks {
+      snek.draw(renderer);
+    }
 
     // draw the pills
     for pill in &self.pills {

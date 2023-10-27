@@ -14,6 +14,7 @@ pub fn direction(key_state: &KeyState) -> Option<Direction> {
   return None;
 }
 
+#[derive(Clone)]
 pub struct Snek {
   color: String,
   speed: f64, // pixels per second
@@ -96,7 +97,7 @@ fn length(snek: &Snek) -> f64 {
 fn final_segment_length(path: &Vec<Point2d>) -> f64 {
   let p0 = path.get(0).unwrap();
   let p1 = path.get(1).unwrap();
-  (p0.x - p1.x).abs() + (p0.y - p1.y).abs() 
+  (p0.x - p1.x).abs() + (p0.y - p1.y).abs()
 }
 
 fn shorten_path(path: &mut Vec<Point2d>, amount: f64) {
@@ -120,11 +121,11 @@ fn shorten_path(path: &mut Vec<Point2d>, amount: f64) {
         p0.x -= amount;
       }
     }
-  } 
+  }
 }
 
 pub struct Boundary {
-  rect: Rect  
+  rect: Rect
 }
 
 impl Boundary {
@@ -158,6 +159,68 @@ impl Boundary {
     let x = x + 10.0 + (width-20.0)*rand::random::<f64>();
     let y = y + 10.0 + (height-20.0)*rand::random::<f64>();
     Point2d { x, y }
+  }
+}
+
+#[derive(Clone)]
+pub struct AiSnek {
+  snek: Snek,
+  alive: bool,
+  frames_since_turn: u8,
+}
+
+impl AiSnek {
+  pub fn new(color: String, speed: f64, position: Point2d, direction: Direction) -> Self {
+    Self {
+      snek: Snek::new(color, speed, position, direction),
+      alive: true,
+      frames_since_turn: 0,
+    }
+  }
+
+  pub fn get(&self) -> &Snek {
+    &self.snek
+  }
+
+  pub fn die(&mut self) {
+    self.alive = false;
+  }
+
+  pub fn draw(&self, renderer: &Renderer) {
+    self.snek.draw(renderer);
+  }
+
+  pub fn update(&mut self) {
+    if !self.alive { return; }
+
+    // TODO decision to turn
+    self.frames_since_turn += 1;
+    if self.frames_since_turn == 50 {
+      self.frames_since_turn = 0;
+      let current_pos = self.snek.path[self.snek.path.len() - 1].clone();
+      self.snek.path.push(current_pos);
+      match self.snek.direction {
+        Direction::Up | Direction::Down => {
+          self.snek.direction = if rand::random() { Direction::Left } else { Direction::Right };
+        },
+        Direction::Left | Direction::Right => {
+          self.snek.direction = if rand::random() { Direction::Up } else { Direction::Down };
+        }
+      }
+    }
+
+    // move the snek
+    let distance = self.snek.speed * FRAME_LENGTH;
+    let i = self.snek.path.len() - 1;
+    // lengthen in the direction of movement
+    match self.snek.direction {
+      Direction::Up    => { self.snek.path.get_mut(i).unwrap().y -= distance; }
+      Direction::Down  => { self.snek.path.get_mut(i).unwrap().y += distance; }
+      Direction::Left  => { self.snek.path.get_mut(i).unwrap().x -= distance; }
+      Direction::Right => { self.snek.path.get_mut(i).unwrap().x += distance; }
+    }
+    // shorten the end
+    shorten_path(&mut self.snek.path, distance*0.95);
   }
 }
 

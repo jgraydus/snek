@@ -1,5 +1,5 @@
 use crate::engine::{Point2d,Rect};
-use crate::snek::entity::{Boundary,Direction,Snek};
+use crate::snek::entity::{AiSnek,Boundary,Direction,Snek};
 use crate::snek::pill::{Pill};
 
 pub trait Collision<Other> {
@@ -92,6 +92,46 @@ impl Collision<Snek> for Snek {
     }
 
     false
+  }
+}
+
+impl Collision<AiSnek> for Snek {
+  type Output = bool;
+
+  fn colliding(&self, other: &AiSnek) -> Self::Output {
+    self.colliding(other.get())
+  }
+}
+
+impl Collision<()> for AiSnek {
+  type Output = bool;
+
+  fn colliding(&self, _other: &()) -> Self::Output {
+    self.get().colliding(&())
+  }
+}
+
+impl Collision<AiSnek> for AiSnek {
+  type Output = bool;
+
+  fn colliding(&self, other: &AiSnek) -> Self::Output {
+    self.get().colliding(other.get())
+  }
+}
+
+impl Collision<Snek> for AiSnek {
+  type Output = bool;
+
+  fn colliding(&self, other: &Snek) -> Self::Output {
+    self.get().colliding(other)
+  }
+}
+
+impl Collision<Boundary> for AiSnek {
+  type Output = bool;
+
+  fn colliding(&self, boundary: &Boundary) -> Self::Output {
+    self.get().colliding(boundary)
   }
 }
 

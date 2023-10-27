@@ -5,7 +5,8 @@ const RADIUS: f64 = 5.0;
 
 pub enum PillType {
   ExpandBoundary,
-  ShortenSnek
+  ShortenSnek,
+  SpawnEnemySnek,
 }
 
 impl PillType {
@@ -13,6 +14,7 @@ impl PillType {
     match self {
       PillType::ExpandBoundary => JsValue::from("yellow"),
       PillType::ShortenSnek => JsValue::from("blue"),
+      PillType::SpawnEnemySnek => JsValue::from("red"),
     }
   }
 }
