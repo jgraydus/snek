@@ -22,14 +22,17 @@ pub struct Snek {
 }
 
 impl Snek {
-  pub fn new() -> Self {
-    Self {
-      color: "white".to_string(),
-      speed: 60.0,
-      path: vec![Point2d { x: 400.0, y: 320.0 },
-                 Point2d { x: 400.0, y: 300.0 }],
-      direction: Direction::Up,
+  pub fn new(color: String, speed: f64, position: Point2d, direction: Direction) -> Self {
+    let mut path = Vec::new();
+    let Point2d { x, y } = position.clone();
+    match direction {
+      Direction::Up    => { path.push(Point2d { x, y: y+20.0 }); }
+      Direction::Down  => { path.push(Point2d { x, y: y-20.0 }); }
+      Direction::Left  => { path.push(Point2d { x: x+20.0, y }); }
+      Direction::Right => { path.push(Point2d { x: x-20.0, y }); }
     }
+    path.push(position);
+    Self { color, speed, path, direction }
   }
 
   pub fn path(&self) -> &Vec<Point2d> { &self.path }

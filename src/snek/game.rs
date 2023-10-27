@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::constants::*;
 use crate::engine::{Game, KeyState, Point2d, Rect, Renderer};
 use crate::snek::collision::{Collision};
-use crate::snek::entity::{Boundary, direction, Snek};
+use crate::snek::entity::{Boundary, Direction, direction, Snek};
 use crate::snek::pill::{Pill,PillType};
 use rand;
 use wasm_bindgen::prelude::*;
@@ -23,7 +23,10 @@ impl SnekGame {
       ready: false,
       game_over: false,
       frame_number: 0,
-      snek: Snek::new(),
+      snek: Snek::new("white".to_string(),
+                      60.0,
+                      Point2d { x: 400.0, y: 300.0 },
+                      Direction::Up),
       boundary: Boundary::new(),
       pills: Vec::new(),
       frames_since_pill_spawn: 0,
