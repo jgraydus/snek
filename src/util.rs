@@ -17,7 +17,7 @@ pub fn get_canvas() -> web_sys::HtmlCanvasElement {
       .unwrap()
       .dyn_into::<web_sys::HtmlCanvasElement>()
       .unwrap();
-  canvas.focus();
+  let _ = canvas.focus();
   canvas
 }
 

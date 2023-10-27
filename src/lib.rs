@@ -16,7 +16,7 @@ pub fn main_js() -> Result<(), JsValue> {
     console_error_panic_hook::set_once();
 
     wasm_bindgen_futures::spawn_local(async move {
-        let mut game = snek::SnekGame::new();
+        let game = snek::SnekGame::new();
         Engine::start(game).await.unwrap();
     });
 

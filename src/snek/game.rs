@@ -93,7 +93,7 @@ impl Game for SnekGame {
     // draw the pills
     for pill in &self.pills {
       pill.draw(renderer);
-    } 
+    }
   }
 }
 

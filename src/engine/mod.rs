@@ -23,7 +23,7 @@ pub trait Game {
 pub struct Engine {}
 
 impl Engine {
-  pub async fn start(mut game: impl Game + 'static) -> Result<(), String> {
+  pub async fn start(game: impl Game + 'static) -> Result<(), String> {
     // get the canvas and ensure it's the correct size
     let canvas = util::get_canvas();
     canvas.set_height(CANVAS_HEIGHT);
