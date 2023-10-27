@@ -4,7 +4,7 @@ use crate::engine::{Game, KeyState, Point2d, Rect, Renderer};
 use crate::snek::collision::{Collision};
 use crate::snek::entity::{Boundary, direction, Snek};
 use crate::snek::pill::{Pill,PillType};
-use rand::prelude::*;
+use rand;
 use wasm_bindgen::prelude::*;
 
 pub struct SnekGame {

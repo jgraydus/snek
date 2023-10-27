@@ -1,6 +1,6 @@
 use crate::constants::*;
 use crate::engine::{Key,KeyState,Point2d,Rect,Renderer};
-use rand::prelude::*;
+use rand;
 use wasm_bindgen::prelude::*;
 
 #[derive(Clone,Copy,Debug,Eq,Ord,PartialEq,PartialOrd)]
