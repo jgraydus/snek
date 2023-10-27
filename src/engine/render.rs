@@ -106,5 +106,10 @@ impl Renderer {
     }
   }
 
+  pub fn text(&self, s: &str, color: &str, size: u8, x: f64, y: f64) {
+    self.cxt.set_font(&format!("{size}pt sans-serif"));
+    self.cxt.set_fill_style(&JsValue::from_str(color));
+    self.cxt.fill_text(s, x, y).unwrap();
+  }
 }
 

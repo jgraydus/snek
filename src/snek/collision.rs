@@ -13,9 +13,9 @@ impl Collision<()> for Snek {
   type Output = bool;
 
   fn colliding(&self, _other: &()) -> Self::Output {
-    let dir = self.direction;
-    let length = self.path.len();
-    let head = self.path.get(length-1).unwrap();
+    let dir = self.direction();
+    let length = self.path().len();
+    let head = self.path().get(length-1).unwrap();
 
     // make two points for the corners of the head of the snake
     let (h1, h2) = if dir == Direction::Left || dir == Direction::Right {
@@ -25,7 +25,7 @@ impl Collision<()> for Snek {
     };
 
     // check for self collisions
-    for window in self.path[0..length-2].windows(2) {
+    for window in self.path()[0..length-2].windows(2) {
       let p1 = &window[0];
       let p2 = &window[1];
 
@@ -57,9 +57,9 @@ impl Collision<Snek> for Snek {
   type Output = bool;
 
   fn colliding(&self, other: &Snek) -> Self::Output {
-    let dir = self.direction;
-    let length = self.path.len();
-    let head = self.path.get(length-1).unwrap();
+    let dir = self.direction();
+    let length = self.path().len();
+    let head = self.path().get(length-1).unwrap();
 
     // make two points for the corners of the head of the snake
     let (h1, h2) = if dir == Direction::Left || dir == Direction::Right {
@@ -68,7 +68,7 @@ impl Collision<Snek> for Snek {
       (Point2d { x: head.x-5.0, y: head.y }, Point2d { x: head.x+5.0, y: head.y })
     };
 
-    for window in other.path.windows(2) {
+    for window in other.path().windows(2) {
       let p1 = &window[0];
       let p2 = &window[1];
 
@@ -100,9 +100,9 @@ impl Collision<Boundary> for Snek {
   type Output = bool;
 
   fn colliding(&self, boundary: &Boundary) -> Self::Output {
-    let dir = self.direction;
-    let length = self.path.len();
-    let head = self.path.get(length-1).unwrap();
+    let dir = self.direction();
+    let length = self.path().len();
+    let head = self.path().get(length-1).unwrap();
 
     // make two points for the corners of the head of the snake
     let (h1, h2) = if dir == Direction::Left || dir == Direction::Right {
@@ -127,9 +127,9 @@ impl Collision<Vec<Pill>> for Snek {
   type Output = Option<usize>;
 
   fn colliding(&self, pills: &Vec<Pill>) -> Self::Output {
-    let dir = self.direction;
-    let length = self.path.len();
-    let head = self.path.get(length-1).unwrap();
+    let dir = self.direction();
+    let length = self.path().len();
+    let head = self.path().get(length-1).unwrap();
 
     // make two points for the corners of the head of the snake
     let (h1, h2) = if dir == Direction::Left || dir == Direction::Right {

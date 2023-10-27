@@ -9,6 +9,7 @@ use wasm_bindgen::prelude::*;
 
 pub struct SnekGame {
   ready: bool,
+  game_over: bool,
   frame_number: u64,
   snek: Snek,
   boundary: Boundary,
@@ -20,6 +21,7 @@ impl SnekGame {
   pub fn new() -> Self {
     Self {
       ready: false,
+      game_over: false,
       frame_number: 0,
       snek: Snek::new(),
       boundary: Boundary::new(),
@@ -36,20 +38,18 @@ impl Game for SnekGame {
   }
 
   fn update(&mut self, key_state: &KeyState) {
+    // ---------------------------------------------------------------------
+    // bookkeeping
     self.frame_number += 1;
     self.frames_since_pill_spawn += 1;
+    // ready flag prevents game from starting until user provides an input
+    if let Some(_) = direction(key_state) { self.ready = true; }
+    if !self.ready || self.game_over { return; }
 
-    if let Some(_) = direction(key_state) {
-      self.ready = true;
-    }
-
-    if !self.ready { return; }
-
-    self.snek.update(key_state);
-
+    // ---------------------------------------------------------------------
+    // check for collisions
     if self.snek.colliding(&()) || self.snek.colliding(&self.boundary) {
-      // log!("collision: {c:?}");
-      // TODO game over
+      self.game_over = true;
     }
 
     // check for pill collisions
@@ -61,6 +61,10 @@ impl Game for SnekGame {
         PillType::ShortenSnek => { self.snek.shorten(0.1); },
       }
     }
+
+    // ---------------------------------------------------------------------
+    // update game state
+    self.snek.update(key_state);
 
     // maybe spawn a pill
     if rand::random::<f64>() < 0.0001 * self.frames_since_pill_spawn as f64 {
@@ -83,6 +87,11 @@ impl Game for SnekGame {
       None,
       Some(&JsValue::from("red")),
       Some(5.0));
+
+    if self.game_over {
+      renderer.text("GAME OVER", "red", 30, 280.0, 320.0);
+      return;
+    }
 
     // draw the boundary
     self.boundary.draw(renderer);

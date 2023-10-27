@@ -15,20 +15,25 @@ pub fn direction(key_state: &KeyState) -> Option<Direction> {
 }
 
 pub struct Snek {
-  pub speed: f64, // pixels per second
-  pub path: Vec<Point2d>,
-  pub direction: Direction,
+  color: String,
+  speed: f64, // pixels per second
+  path: Vec<Point2d>,
+  direction: Direction,
 }
 
 impl Snek {
   pub fn new() -> Self {
     Self {
+      color: "white".to_string(),
       speed: 60.0,
       path: vec![Point2d { x: 400.0, y: 320.0 },
                  Point2d { x: 400.0, y: 300.0 }],
       direction: Direction::Up,
     }
   }
+
+  pub fn path(&self) -> &Vec<Point2d> { &self.path }
+  pub fn direction(&self) -> Direction { self.direction }
 
   pub fn update(&mut self, key_state: &KeyState) {
     // handle changing directions
@@ -66,7 +71,7 @@ impl Snek {
   }
 
   pub fn draw(&self, renderer: &Renderer) {
-    renderer.path(&self.path, &JsValue::from("red"), Some(10.0));
+    renderer.path(&self.path, &JsValue::from(&self.color), Some(10.0));
   }
 
   pub fn shorten(&mut self, percentage: f64) {
