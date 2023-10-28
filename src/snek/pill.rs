@@ -13,7 +13,7 @@ pub enum PillType {
 impl PillType {
   fn to_js_value(&self) -> JsValue {
     match self {
-      PillType::ExpandBoundary => JsValue::from("yellow"),
+      PillType::ExpandBoundary => JsValue::from("white"),
       PillType::ShortenSnek => JsValue::from("blue"),
       PillType::SpawnEnemySnek => JsValue::from("red"),
       PillType::IncreaseSpeed => JsValue::from("green"),

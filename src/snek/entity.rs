@@ -228,3 +228,29 @@ impl AiSnek {
   }
 }
 
+pub struct Exit {
+  rect: Rect,
+}
+
+impl Exit {
+  pub fn new() -> Self {
+    Self { rect: Rect::new(780.0, 260.0, 20.0, 80.0) }
+  }
+
+  pub fn draw(&self, renderer: &Renderer) {
+    renderer.rect(
+      &self.rect,
+      Some(&JsValue::from("white")),
+      None,
+      None);
+    renderer.text("E", "black", 16, 783.0, 278.0);
+    renderer.text("X", "black", 16, 783.0, 298.0);
+    renderer.text("I", "black", 16, 787.0, 318.0);
+    renderer.text("T", "black", 16, 783.0, 338.0);
+  }
+
+  pub fn contains(&self, p: &Point2d) -> bool {
+    self.rect.contains(p)
+  }
+}
+

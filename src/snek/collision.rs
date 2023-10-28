@@ -1,5 +1,5 @@
 use crate::engine::{Point2d,Rect};
-use crate::snek::entity::{AiSnek,Boundary,Direction,Snek};
+use crate::snek::entity::{AiSnek,Boundary,Direction,Exit,Snek};
 use crate::snek::pill::{Pill};
 
 pub trait Collision<Other> {
@@ -154,11 +154,27 @@ impl Collision<Boundary> for Snek {
     // check for bounaary collisions
     let Rect { x, y, width, height } = boundary.rect();
     let rect = Rect::new(x+5.0, y+5.0, width-10.0, height-10.0);
-    if !rect.contains(&h1) || !rect.contains(&h2) {
-      return true;
-    }
 
-    false
+    !rect.contains(&h1) || !rect.contains(&h2)
+  }
+}
+
+impl Collision<Exit> for Snek {
+  type Output = bool;
+
+  fn colliding(&self, exit: &Exit) -> Self::Output {
+    let dir = self.direction();
+    let length = self.path().len();
+    let head = self.path().get(length-1).unwrap();
+
+    // make two points for the corners of the head of the snake
+    let (h1, h2) = if dir == Direction::Left || dir == Direction::Right {
+      (Point2d { x: head.x, y: head.y-5.0 }, Point2d { x: head.x, y: head.y+5.0 })
+    } else {
+      (Point2d { x: head.x-5.0, y: head.y }, Point2d { x: head.x+5.0, y: head.y })
+    };
+
+    exit.contains(&h1) || exit.contains(&h2)
   }
 }
 

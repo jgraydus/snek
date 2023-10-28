@@ -2,7 +2,7 @@ use async_trait::async_trait;
 use crate::constants::*;
 use crate::engine::{Game, KeyState, Point2d, Rect, Renderer};
 use crate::snek::collision::{Collision};
-use crate::snek::entity::{AiSnek,Boundary, Direction, direction, Snek};
+use crate::snek::entity::{AiSnek, Boundary, Direction, direction, Exit, Snek};
 use crate::snek::pill::{Pill,PillType};
 use rand;
 use wasm_bindgen::prelude::*;
@@ -10,7 +10,9 @@ use wasm_bindgen::prelude::*;
 pub struct SnekGame {
   ready: bool,
   game_over: bool,
+  win: bool,
   frame_number: u64,
+  exit: Exit,
   snek: Snek,
   boundary: Boundary,
   pills: Vec<Pill>,
@@ -23,7 +25,9 @@ impl SnekGame {
     Self {
       ready: false,
       game_over: false,
+      win: false,
       frame_number: 0,
+      exit: Exit::new(),
       snek: Snek::new("white".to_string(),
                       60.0,
                       Point2d { x: 400.0, y: 300.0 },
@@ -53,6 +57,11 @@ impl Game for SnekGame {
 
     // ---------------------------------------------------------------------
     // check for collisions
+    if self.snek.colliding(&self.exit) {
+      self.game_over = true;
+      self.win = true;
+      return;
+    }
     if self.snek.colliding(&()) || self.snek.colliding(&self.boundary) {
       self.game_over = true;
       return;
@@ -140,21 +149,20 @@ impl Game for SnekGame {
 
     if self.game_over {
       renderer.text("GAME OVER", "red", 30, 280.0, 320.0);
+      if self.win {
+        renderer.text("you have won", "red", 20, 320.0, 360.0);
+      }
       return;
     }
 
-    // draw the boundary
     self.boundary.draw(renderer);
-
-    // draw the snek
+    self.exit.draw(renderer);
     self.snek.draw(renderer);
 
-    // draw the enemy sneks
     for snek in &self.enemy_sneks {
       snek.draw(renderer);
     }
 
-    // draw the pills
     for pill in &self.pills {
       pill.draw(renderer);
     }
